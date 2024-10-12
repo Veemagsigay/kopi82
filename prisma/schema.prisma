@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+     
+
+model employee {
+  employee_id      Int                @id @default(autoincrement())
+  username         String
+  password         String
+  role             String
+  last_name        String
+  first_name       String
+  middle_name      String
+  // purchase_request purchase_request[]
+}
+
+//INVENTORY
+
+model back_inventory {
+  bd_id                   Int               @id @default(autoincrement())
+  item_id                 Int
+  pd_id                   Int 
+  pi_id                   Int?         
+  stock_in_date           DateTime?
+  stock_out_date          DateTime?
+  stock_damaged           Int
+  stock_used              Int
+  front_inventory         front_inventory?
+  purchased_item          purchased_item?   @relation(fields: [pi_id], references: [pi_id])
+  purchased_detail        purchased_detail? @relation(fields: [pd_id], references: [pd_id])
+  inventory_shelf         inventory_shelf[]
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+}
+
+model front_inventory {
+  fd_id          Int            @id @default(autoincrement())
+  bd_id          Int            @unique
+  in_stock       Int
+  stock_used     Int
+  stock_damaged  Int
+  stock_in_date  DateTime?
+  stock_out_date DateTime?
+  product_id     Int?
+  back_inventory back_inventory @relation(fields: [bd_id], references: [bd_id])
+  product        product?       @relation(fields: [product_id], references: [product_id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  //product product[]
+}
+
+// model purchase_request {
+//   pr_id        Int      @id @default(autoincrement())
+//   item_id      Int
+//   quantity     Int
+//   employee_id  Int
+//   date_ordered DateTime @default(now())
+//   status       String
+//   item         item     @relation(fields: [item_id], references: [item_id])
+//   employee     employee @relation(fields: [employee_id], references: [employee_id])
+//   createdAt    DateTime @default(now())
+// }
+
+model purchased_item {
+  pi_id            Int                @id @default(autoincrement())
+  receipt_no       Int
+  purchase_date    DateTime           @default(now())
+  purchased_detail purchased_detail[]
+  back_inventory   back_inventory[]
+  createdAt        DateTime           @default(now())
+}
+
+model purchased_detail {
+  pd_id                      Int                        @id @default(autoincrement())
+  pi_id                      Int
+  item_id                    Int
+  quantity                   Int
+  unit_id                    Int
+  category_id                Int
+  price                      Float
+  expiry_date                DateTime?
+  supplier_id                Int
+  purchased_item             purchased_item             @relation(fields: [pi_id], references: [pi_id])
+  item                       item                       @relation(fields: [item_id], references: [item_id])
+  unit                       unit                       @relation(fields: [unit_id], references: [unit_id])
+  category                   category                   @relation(fields: [category_id], references: [category_id])
+  back_inventory             back_inventory[]
+  processed_purchase_details ProcessedPurchaseDetails[]
+  supplier                   supplier                   @relation(fields: [supplier_id], references: [supplier_id])
+  createdAt                  DateTime                   @default(now())
+}
+
+model ProcessedPurchaseDetails {
+  ppd_id           Int              @id @default(autoincrement())
+  pd_id            Int              @unique
+  processed_at     DateTime         @default(now())
+  purchased_detail purchased_detail @relation(fields: [pd_id], references: [pd_id])
+}
+
+model unit {
+  unit_id          Int                @id @default(autoincrement())
+  unit_name        String
+  item             item[]
+  purchased_detail purchased_detail[]
+  // back_inventory back_inventory[]
+}
+
+model category {
+  category_id   Int    @id @default(autoincrement())
+  category_name String
+  item          item[]
+  purchased_detail purchased_detail[]
+  // back_inventory back_inventory[]
+}
+
+model shelf_location {
+  sl_id   Int    @id @default(autoincrement())
+  sl_name String
+  inv_type String
+  inventory_shelf inventory_shelf[]
+}
+
+model inventory_shelf {
+  is_id   Int    @id @default(autoincrement())
+  bd_id  Int
+  sl_id  Int
+  quantity Int
+  hidden      Boolean  @default(false)
+  shelf_location shelf_location @relation(fields: [sl_id], references: [sl_id])
+  back_inventory back_inventory @relation(fields: [bd_id], references: [bd_id])
+  @@unique([bd_id, sl_id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model item {
+  item_id          Int                @id @default(autoincrement())
+  item_name        String
+  description      String
+  unit_id          Int
+  category_id      Int
+  unit             unit               @relation(fields: [unit_id], references: [unit_id])
+  category         category           @relation(fields: [category_id], references: [category_id])
+  purchased_detail purchased_detail[]
+  // purchase_request purchase_request[]
+  createdAt        DateTime           @default(now())
+}
+
+model supplier {
+  supplier_id   Int    @id @default(autoincrement())
+  supplier_name String
+  contact_no    String
+  address       String
+  purchased_detail purchased_detail[]
+}
+
+//PRODUCT
+
+model product {
+  product_id      Int               @id @default(autoincrement())
+  category        String
+  product_name    String
+  type            String
+  hotPrice        Float
+  icedPrice       Float
+  frappePrice     Float
+  singlePrice     Float
+  status          String
+  description     String
+  image_url       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  //fd_id Int @unique
+  //front_inventory front_inventory @relation(fields: [fd_id], references: [fd_id])
+  front_inventory front_inventory[]
+  order_details   order_details[]
+  // ProductOrderDetails ProductOrderDetails[] (!!!!for many-to-many relation)
+}
+
+//ORDER
+
+model order {
+  order_id      Int             @id @default(autoincrement())
+  customer_name String
+  service_type  String
+  date          DateTime        @default(now())
+  order_details order_details[]
+  payment       payment?
+}
+
+model order_details {
+  orderDetails_id Int     @id @default(autoincrement())
+  order_id        Int
+  product_id      Int
+  quantity        Int
+  order           order   @relation(fields: [order_id], references: [order_id])
+  product         product @relation(fields: [product_id], references: [product_id])
+  // ProductOrderDetails ProductOrderDetails[] (!!!!for many-to-many relation)
+}
+
+// model ProductOrderDetails {
+//   product_id Int
+//   orderDetails_id Int
+//   product product @relation(fields: [product_id], references: [product_id])
+//   order_details order_details @relation(fields: [orderDetails_id], references: [orderDetails_id])
+
+//   @@id([product_id, orderDetails_id])
+// } (!!!!for many-to-many relation)
+
+//PAYMENT
+
+model payment {
+  payment_id          Int                     @id @default(autoincrement())
+  order_id            Int?                    @unique
+  discount_id         Int?
+  p_method_eWallet_id Int?                    @unique
+  p_method_otc_id     Int?                    @unique
+  date                DateTime                @default(now())
+  order               order?                  @relation(fields: [order_id], references: [order_id])
+  discount            discount?               @relation(fields: [discount_id], references: [discount_id])
+  eWallet             payment_method_eWallet? @relation(fields: [p_method_eWallet_id], references: [p_method_id])
+  otc                 payment_method_otc?     @relation(fields: [p_method_otc_id], references: [p_method_id])
+}
+
+model discount {
+  discount_id   Int       @id @default(autoincrement())
+  discount_name String
+  discount_rate Float
+  status        String
+  payment       payment[]
+}
+
+model payment_method_eWallet {
+  p_method_id  Int      @id @default(autoincrement())
+  mode         String
+  reference_no String
+  payment      payment?
+}
+
+model payment_method_otc {
+  p_method_id Int      @id @default(autoincrement())
+  mode        String
+  amount      Float
+  change      Float
+  payment     payment?
+}
+
+//SALES
+
+model product_sales {
+  sales_id        Int      @id @default(autoincrement())
+  orderDetails_id Int      @unique
+  product_sold    Int
+  total_sales     Float
+  date            DateTime
+}

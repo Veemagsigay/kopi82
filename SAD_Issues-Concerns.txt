@@ -1,0 +1,44 @@
+SAD Issues (July 28, 2024)
+- unsure of purchase_order FK in back_inventory
+- the relationship between product and front_inventory
+- the relationship between product and order_details
+- Variables of Sales
+
+
+SAD Issues (August 1, 2024)
+- no relation between purchase and back inventory
+- no relation for product sales
+- unclear relation for product and order details
+- relationship created in prisma does not correctly reflect in mysql workbench (1-to-1 relationship will be reflected as 1-to-many in workbench)
+
+
+SAD Issues (August 20, 2024)
+- unsure how to get the recent po_id for purchase_details
+- did not fix the sales yet
+- did not test backend connection
+- no design on puchase order and purchase details pages
+- no api for pictures 
+
+
+SAD Issues/Updates (August 23, 2024)
+- started to implement form in purchase details
+- add functionality to add new row and be able to input new purchase details
+- found a way to automatically put the recent po_id upon redirecting to purchase details page
+- need to test the functionality, ready example
+- started constructing the back inventory; however, i cannot get the relation of bd_id and po_id 
+- fix the input on date variables in Add-BackInvetory page (stock in date and expiry date)
+
+
+SAD Issues/Updates (Aug 24, 2024)
+- created add new row function for purchase details
+- must test the uuid functionality
+- decide whether to make it a component or not
+
+
+SAD Issues/Updates (Aug 25, 2024)
+- created add page for front inventory
+
+
+September 2, 2024
+- Setup Supabase 
+- Password: Group3M1!051220
